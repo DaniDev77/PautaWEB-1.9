@@ -1,0 +1,242 @@
+# Pauta: sua rotina, um dia de cada vez
+
+Frontend de rotina pessoal para a API ASP.NET Core do projeto (`Usuario`, `Categoria` e `Tarefa`):
+beber água, academia, estudos, acordar, dormir, o que fizer parte do dia.
+Feito só com HTML, CSS e JavaScript (módulos ES), **sem build e sem dependências**: abre no VS Code e roda.
+A API **não foi alterada**: a rotina é montada em cima das Tarefas que já existem.
+
+- **Hoje**: a pauta do dia por manhã, tarde e noite; segure o botão para marcar; o Ritmo do dia mostra cada item no seu horário
+- **Progresso**: constância de 30 dias, mapa de 17 semanas, sequências, períodos do dia, dias da semana e áreas
+- **Rotina**: os hábitos por área, até quando estão na pauta, estender, editar e encerrar
+- **Foco**: cronômetro para estudar, ler ou treinar, ligado ao status "Em andamento" da API
+- **Ajustes**: perfil, endereço da API, tema, instalar no celular e modo demonstração
+
+---
+
+## Como rodar
+
+### 1. Prepare a API (uma vez só)
+
+O `Program.cs` precisa liberar o **CORS**, senão o navegador bloqueia as chamadas do frontend.
+Também é preciso aceitar descrição e telefone vazios. O trecho já foi aplicado neste repositório:
+
+```csharp
+// antes do builder.Build()
+var origensFrontend = builder.Configuration.GetSection("Frontend:Origens").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        if (builder.Environment.IsDevelopment())
+            policy.AllowAnyOrigin();
+        else
+            policy.WithOrigins(origensFrontend);
+
+        policy.AllowAnyHeader().AllowAnyMethod();
+    });
+});
+
+builder.Services.AddControllers(options =>
+    {
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    })
+    .AddJsonOptions(/* ... como já estava ... */);
+
+// depois do app.UseHttpsRedirection()
+app.UseCors("Frontend");
+```
+
+E no `appsettings.json` (usado fora do modo Development):
+
+```json
+"Frontend": {
+  "Origens": [ "http://127.0.0.1:5500", "http://localhost:5500" ]
+}
+```
+
+### 2. Rode a API
+
+No Visual Studio, abra `projeto.slnx`, escolha o perfil **https** e aperte **F5**.
+O Swagger abre em `https://localhost:7187/swagger`. Deixe a API rodando.
+
+> Na primeira vez, abra esse endereço no **mesmo navegador** que vai usar o frontend e aceite o aviso de certificado, se aparecer.
+> Se preferir confiar no certificado de vez: `dotnet dev-certs https --trust`.
+
+### 3. Abra o frontend no VS Code
+
+1. `Arquivo > Abrir Pasta…` e escolha a pasta **web**
+2. O VS Code sugere a extensão **Live Server** (recomendada em `.vscode/extensions.json`). Instale.
+3. Clique em **Go Live** na barra inferior (ou botão direito em `index.html` > **Open with Live Server**)
+4. O navegador abre em `http://127.0.0.1:5500`
+
+> Abrir o `index.html` com dois cliques não funciona: navegadores não carregam módulos JavaScript a partir de `file://`. A página avisa isso se acontecer.
+
+### Sem a API ligada?
+
+Use o **modo demonstração** (na tela de erro de conexão ou em Ajustes). Ele carrega a rotina de uma pessoa de exemplo,
+com 17 semanas de histórico, e guarda tudo no navegador. Bom para apresentar o sistema.
+
+Para mostrar a um cliente, abra direto `http://127.0.0.1:5500/index.html?demo`: o `?demo` liga a demonstração sem mexer nas suas configurações.
+
+---
+
+## Como a rotina usa a API
+
+| Na rotina | Na API | Como |
+|---|---|---|
+| Perfil (quem usa) | `Usuario` | Cada perfil tem a sua rotina. E-mail e telefone são opcionais. |
+| Área (Saúde, Treino…) | `Categoria` | O tom de cada área vem do ID e não muda. |
+| Hábito | `Habito` | A regra: dias da semana (`DiasSemana` "1,3,5"), `HoraInicio` e `HoraFim`, prazo (`DataFim`, nulo = sem prazo). |
+| Hábito sem horário (água) | `Habito` sem horas | Lembrete: vale o dia todo (00:00 às 23:59), nunca fica atrasado. `LembrarACadaMinutos` liga o aviso. |
+| Item da pauta de um dia | `Tarefa` | Gerada pela API quando o dia chega (`POST /api/Habito/gerar`), com `HabitoId`, `DataInicio` e `DataLimite` (fim). Item avulso não tem hábito nem início. |
+| Dias que ainda não chegaram | nada no banco | O site calcula os itens previstos a partir dos hábitos. |
+| Feito / Pulado | `Status` 3 / 4 | Pulado (Cancelada) não conta como falha nem como feito. |
+| Foco rodando | `Status` 2 | O item fica "Em andamento" enquanto o cronômetro roda. |
+
+- **Ao abrir o app**: `GET /api/Habito`, `GET /api/Tarefa?de=` (últimos 200 dias) e `POST /api/Habito/gerar` para hoje e os 13 dias anteriores. Dia em que o app não foi aberto aparece como "não marcado".
+- **Criar um hábito**: um `POST /api/Habito`. Nada de semanas de tarefas de uma vez.
+- **Editar**: `PUT /api/Habito/{id}`; a API ajusta os próximos itens em aberto. O histórico nunca é alterado.
+- **Estender / tirar o prazo / retomar**: muda `DataFim` e `Ativo`.
+- **Encerrar**: `Ativo = false`; os itens que ainda não começaram saem e o histórico fica no Progresso.
+- **Sequência**: dias (ou vezes, para hábitos que não são diários) seguidos com tudo feito. Dia pulado não quebra a sequência.
+- **Constância**: feitos ÷ (feitos + não marcados), sem contar os pulados.
+- **Avisos**: com o app aberto, das 8h às 22h, no intervalo escolhido, enquanto o lembrete não foi marcado.
+- **API antiga** (sem `HabitoController`): o site percebe (404 em `/api/Habito`) e volta ao modo anterior, criando as tarefas das próximas semanas. Os hábitos antigos com o mesmo nome e área viram hábitos da API ao estender ou editar, e o histórico continua junto.
+
+## Escreva como fala
+
+O campo "Adicionar à pauta" entende frases e mostra a leitura antes de salvar:
+
+| Frase | Vira |
+|---|---|
+| `academia 18h30 seg qua sex` | hábito: seg, qua e sex às 18:30, por 4 semanas |
+| `beber água 4x ao dia` | hábito: todo dia às 09:00, 12:00, 15:00 e 18:00 |
+| `acordar 6h30 dias úteis` | hábito: dias úteis às 06:30 |
+| `lavar roupa toda terça e quinta às 19h por 2 semanas` | hábito por 2 semanas |
+| `dentista amanhã 14h #saúde` | item avulso amanhã às 14:00, na área Saúde |
+| `pagar a conta de luz 25/10` | item avulso no dia 25 |
+
+A área é adivinhada pelo título (água → Saúde, academia → Treino, estudar → Estudos…) e pode ser trocada na leitura.
+
+## Interações
+
+- **Segure para marcar**: o anel enche em meio segundo e o item é marcado (com vibração no celular). Um toque curto só mostra a dica, então não dá para marcar sem querer rolando a tela. No teclado, Enter marca na hora. Toda marcação tem "Desfazer".
+- **Ritmo do dia**: cada item é um ponto no seu horário; a linha verde é o agora. Clique num ponto para ir ao item.
+- **Agora**: o que fazer neste momento (o que ficou para trás, o próximo, ou "dia completo"), com Fiz, Pular hoje e Adiar 1 h.
+- **Semana**: anéis mostram quanto de cada dia foi feito; ← → trocam o dia.
+- **Foco**: guarda a hora de término, então recarregar a página não perde o tempo; mantém a tela acesa e pode avisar quando terminar.
+- **Instalável**: no celular, "Adicionar à tela inicial" abre o Pauta em tela cheia (manifest + service worker).
+- **Fundo vivo**: manchas de cor macias derivam devagar atrás da folha. As cores mudam com o período do dia (manhã, tarde, noite), ficam mais fortes conforme a pauta do dia é cumprida, e uma onda na cor da área sai do botão quando um item é marcado. Em Ajustes → Aparência dá para deixar parado ou sem fundo. Só anima `transform` e `opacity`, e para sozinho se o aparelho pede menos movimento.
+- **Notificações**: entram com mola, deslizam quando outra entra ou sai, e dá para arrastar para o lado para dispensar. Item feito solta faíscas, dia completo solta confete, e o lembrete balança a figura como um sino. Passar o mouse pausa o tempo.
+
+
+
+## Estrutura
+
+```
+web/
+├── index.html              estrutura da página (lateral, barra do celular, abas, conteúdo)
+├── manifest.webmanifest    app instalável (nome, ícones, cores)
+├── sw.js                   service worker: abre sem internet (rede primeiro; a API nunca passa pelo cache)
+├── assets/                 ícones, favicon e fontes Instrument Sans e Instrument Serif (embutidas)
+├── css/
+│   ├── app.css             ponto de entrada; define a ordem das camadas (@layer)
+│   ├── tokens.css          cores, tipografia, espaçamentos, temas claro e escuro, tons das áreas
+│   ├── base.css            reset e elementos básicos
+│   ├── componentes.css     botões, campos, chips, painéis, diálogos, menu, notificações, paleta
+│   ├── layout.css          lateral no computador; barra e abas no celular
+│   ├── telas.css           Hoje, Progresso, Rotina, Foco, Ajustes, boas-vindas
+│   └── fundo.css           o fundo vivo: manchas, onda, modos animado/parado/desligado
+└── js/
+    ├── app.js              inicialização: rotas, atalhos, tema, sincronização, PWA
+    ├── config.js           nome do produto, endereço da API, semanas por hábito
+    ├── state.js            estado global e ações (marcar, criar hábito em série, estender, encerrar, foco)
+    ├── core/               html seguro + morph, store, rotas, datas, armazenamento
+    ├── data/               http (erros traduzidos), api (Controllers) e demo (mesma interface)
+    ├── domain/
+    │   ├── enums.js        espelho de StatusTarefa e PrioriedadeTarefa + tons das áreas
+    │   ├── rotina.js       hábitos, sequências, constância, períodos, datas em série (funções puras)
+    │   └── frase.js        leitura das frases da adição rápida
+    ├── ui/                 ícones, diálogo, menu, notificação (toast.js), fundo vivo (fundo.js), figuras das notificações,
+    │                       lembretes, dica, paleta, "segure para marcar"
+    ├── forms/              detalhes do item, hábito, área e perfil
+    ├── vendor/charts.js    gráficos em SVG (da taste-skill)
+    └── views/              hoje, adicao, boas-vindas, progresso, rotina, foco, ajustes, conexao
+```
+
+## Como funciona por dentro
+
+- **Camadas**: as telas só leem o estado e chamam ações de `state.js`. Só a camada `data` fala com a API.
+  Trocar a API pelo modo demonstração é trocar a "fonte", sem mexer em nenhuma tela.
+- **Regras puras**: hábitos, sequências, constância e a leitura de frases ficam em `domain/`, sem DOM e sem API.
+  Os testes rodam no terminal, sem navegador: `node testes/rotina.test.mjs` (dentro da pasta web).
+- **Redesenho cirúrgico (morph)**: as telas geram o HTML inteiro e `morph()` mexe só no que mudou (cada item tem um `data-key`).
+  Foco, rolagem e texto digitado são preservados.
+- **Em lote, com limite**: criar um hábito de 4 semanas manda dezenas de POST, no máximo 4 ao mesmo tempo, com o progresso numa notificação.
+- **Atualização otimista**: marcar muda a tela na hora; se a API recusar, volta e aparece o motivo.
+- **Remover com desfazer**: o item some na hora e só é apagado na API depois de 6 segundos.
+- **Exclusão em cascata**: excluir um perfil ou uma área apaga as tarefas ligadas (`ON DELETE CASCADE`). A tela avisa quantas antes.
+- **Erros da API traduzidos**: validação (400) aparece no campo certo; exceções (500) viram uma mensagem clara.
+- **Sincronização**: ao voltar para a aba depois de 45 segundos, os dados são recarregados. O "agora" anda sozinho a cada minuto.
+- **Acessibilidade**: navegação completa por teclado, foco visível, `aria-live` nas notificações, `<dialog>` nativo,
+  a cor sempre acompanhada de texto, respeito a "reduzir movimento".
+  Auditado com **axe-core (WCAG 2.2 AA)** em todas as telas e estados, nos dois temas e no celular: **0 violações**.
+
+## Atalhos de teclado
+
+| Tecla | Ação |
+|---|---|
+| `Ctrl K` | Buscar hábitos, itens e ações (dá para marcar um item de hoje direto daqui) |
+| `N` | Escrever um item novo |
+| `←` `→` | Dia anterior e próximo |
+| `T` | Voltar para hoje |
+| `G` depois `H` `P` `R` `F` | Ir para Hoje, Progresso, Rotina, Foco |
+| `Enter` | No botão redondo: marcar o item |
+| `Ctrl Enter` | Salvar o formulário aberto |
+| `?` | Mostrar os atalhos |
+
+## Design
+
+O visual segue a skill **taste-skill** (`design-taste-frontend`), fluxo de telas de app, estilo
+**editorial-greeting** (seed 1875304898), no clima calmo e editorial:
+
+- **A saudação é o título** e diz o fato do dia, em Instrument Serif ("Bom dia, Marina. Faltam 7 itens hoje.")
+- **A pauta é uma folha pautada**: o horário fica na margem, cada item numa linha
+- **Cor só nos hábitos**: cada área tem um tom (identidade); o verde-petróleo marca o dia (o agora, os anéis, o mapa)
+- **Sem enfeites**: nada de gradientes, desfoques ou sombras em elementos parados; números em peso regular, alinhados
+- **Grade de 12 colunas** (12 × 77px + 11 × 16px = 1100px)
+- Medido com o inspetor da skill: 0 falhas em todas as telas, a 1440, 768 e 390px. O único aviso é a saudação de 48px, que é o movimento do próprio estilo.
+
+## Personalizar
+
+- **Nome do produto**: `js/config.js` (`APP.nome`)
+- **Semanas por hábito novo**: `SEMANAS_PADRAO` em `js/config.js`
+- **Cores**: `css/tokens.css` (`--acento` e os tons `--tom-0` a `--tom-7`; o tema escuro tem os próprios valores)
+- **Sugestões de hábitos**: `SUGESTOES` em `js/domain/rotina.js`
+- **Logo**: função `marca()` em `js/ui/icons.js` e `assets/favicon.svg`
+- **Endereço da API em produção**: `API_PADRAO` em `js/config.js`
+
+## Problemas comuns
+
+| Sintoma | Causa provável | Solução |
+|---|---|---|
+| "A API não respondeu" | API desligada | Rode a API no Visual Studio (F5) |
+| Funciona no Swagger, mas não no site | Certificado HTTPS não aceito neste navegador | Abra `https://localhost:7187/swagger` e aceite o aviso |
+| Erro de CORS no console (F12) | Falta `app.UseCors("Frontend")` | Veja o passo 1 |
+| Perfil não é criado sem e-mail | Falta o ajuste no `AddControllers` | Veja o passo 1 |
+| "Failed to fetch" depois de criar muitos hábitos | O JSON de `GET /api/Tarefa` crescia sem parar (usuário e categoria traziam todas as tarefas de novo) | `[JsonIgnore]` nas listas `Tarefas` de `UsuarioModel` e `CategoriaModel` (já aplicado); rode a API de novo |
+| Porta diferente de 7187 | Outro `launchSettings.json` | Ajuste em Ajustes > Endereço da API |
+| Mudei um arquivo e o navegador mostra o antigo | Cache do service worker | Recarregue com Ctrl+Shift+R |
+| Tela em branco abrindo o arquivo direto | Módulos não carregam em `file://` | Use o Live Server |
+
+## Próximos passos sugeridos
+
+- Na API: quantidade num registro (copos, minutos) para hábitos como "8 copos de água"
+- Avisos com o app fechado (Web Push, precisa de um serviço na API)
+- Devolver `404` em vez de `500` quando o registro não existe (`Atualizar`/`Apagar` nos repositórios)
+
+## Créditos
+
+- Fontes [Instrument Sans e Instrument Serif](https://github.com/Instrument), licença SIL Open Font License 1.1 (arquivos em `assets/fonts`)
+- Ícones [Lucide](https://lucide.dev), licença ISC
+- Gráficos: `charts.js` da skill design-taste-frontend

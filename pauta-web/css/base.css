@@ -1,0 +1,175 @@
+/* Reset enxuto + elementos base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--moldura);
+  color: var(--tinta);
+  font-family: var(--fonte);
+  font-size: var(--t-corpo);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+img,
+svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+code,
+kbd {
+  font-family: inherit;
+  font-size: 0.92em;
+  font-weight: 600;
+}
+
+code {
+  padding: 0.1em 0.35em;
+  border-radius: 5px;
+  background: var(--painel-2);
+  overflow-wrap: anywhere;
+}
+
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7em;
+  height: 1.7em;
+  padding: 0 0.45em;
+  border-radius: 6px;
+  background: var(--painel-2);
+  color: var(--tinta-2);
+  font-size: 0.75rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+::selection {
+  background: var(--acento-suave);
+  color: var(--tinta);
+}
+
+:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.pular {
+  position: fixed;
+  top: var(--e-2);
+  left: var(--e-2);
+  z-index: 100;
+  padding: var(--e-2) var(--e-4);
+  border-radius: var(--r-pilula);
+  background: var(--primario);
+  color: var(--sobre-primario);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform var(--rapido) var(--curva);
+}
+.pular:focus {
+  transform: none;
+}
+
+.aviso-arquivo {
+  max-width: 34rem;
+  margin: 15vh auto;
+  padding: var(--e-8);
+  border-radius: var(--r-painel);
+  background: var(--folha);
+  font-size: 1rem;
+}
+.aviso-arquivo h1 {
+  margin-bottom: var(--e-3);
+  font-family: var(--fonte-saudacao);
+  font-size: 2rem;
+  font-weight: 400;
+}
+.aviso-arquivo p + p {
+  margin-top: var(--e-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

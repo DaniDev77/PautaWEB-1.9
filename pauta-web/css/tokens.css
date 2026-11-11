@@ -1,0 +1,224 @@
+/* Tokens de design: toda cor, fonte e medida do app vem daqui.
+   Estilo de app "editorial-greeting" (taste-skill, seed 1875304898), no clima calmo e editorial:
+   - a moldura (lateral) é papel quente; o conteúdo é uma folha branca;
+   - os painéis são um passo de tom fora do branco, sem sombra;
+   - a cor fica nos hábitos (um tom por área) e no verde-petróleo dos dados do dia;
+   - o botão principal é quase preto. */
+
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('../assets/fonts/instrument-sans.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('../assets/fonts/instrument-serif.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+
+  /* superfícies */
+  --moldura: #f0f0ed; /* lateral e fundo da janela: pedra clara, quase sem cor */
+  --folha: #ffffff; /* a folha onde fica o conteúdo */
+  --painel: #f6f6f4; /* painel tonal */
+  --painel-2: #ecece8; /* item ativo, trilhos, passar o mouse em painel */
+  --sobre: #ffffff; /* cartão dentro de painel */
+  --linha: #e4e4df; /* borda da folha e dos cartões */
+  --linha-leve: #efefeb; /* linhas entre itens */
+  --controle: #d2d2cb; /* borda de campos e botões secundários */
+
+  /* tinta */
+  --tinta: #1f201d;
+  --tinta-2: #55554f; /* texto secundário (≥ 6:1 no painel) */
+  --tinta-3: #66665f; /* meta (≥ 4.6:1 no painel) */
+  --primario: #1f201d; /* botão principal: quase preto */
+  --primario-hover: #000000;
+  --sobre-primario: #ffffff;
+
+  /* o dado do dia: o "agora", o anel da semana, o mapa de constância */
+  --acento: #1b6e66;
+  --acento-texto: #17625b;
+  --acento-suave: #e2efed;
+
+  /* estados */
+  --positivo: #2e7d32;
+  --negativo: #b42318;
+  --negativo-suave: #fdecea;
+  --negativo-tinta: #7a1d14;
+  --aviso: #92400e;
+  --aviso-suave: #fffbeb;
+  --aviso-borda: #fde68a;
+
+  /* áreas: um tom por área (identidade). --t = marca cheia; o tom suave é derivado */
+  --tom-0: #2f6fb3; /* azul */
+  --tom-1: #4f5f7d; /* ardósia */
+  --tom-2: #2f7d4f; /* verde */
+  --tom-3: #a96f12; /* âmbar */
+  --tom-4: #b0457a; /* rosa */
+  --tom-5: #6b761c; /* oliva */
+  --tom-6: #8a5a3c; /* terra */
+  --tom-7: #1f7489; /* ciano */
+
+  /* gráficos (assets/charts.js da taste-skill lê estes nomes) */
+  --chart-1: var(--tinta);
+  --chart-2: var(--acento);
+  --chart-3: #8c8c88;
+  --chart-muted: #c9c7c0;
+  --grid: #ebe9e3;
+  --axis-ink: var(--tinta-3);
+  --ink: var(--tinta);
+  --surface: var(--folha);
+  --raised: var(--painel);
+  --rule: var(--linha-leve);
+  --chart-span: 0.06;
+
+  /* tipografia */
+  --fonte: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+  --fonte-saudacao: 'Instrument Serif', Georgia, serif;
+  --t-meta: 0.75rem; /* 12 */
+  --t-corpo: 0.875rem; /* 14 */
+  --t-item: 1rem; /* 16 */
+  --t-titulo: 1.5rem; /* 24: h1 das telas */
+  --t-numero: 2rem; /* 32: números principais */
+  --t-saudacao: 3rem; /* 48: a saudação do Hoje (serifa) */
+
+  /* espaço (base 4px) */
+  --e-1: 4px;
+  --e-2: 8px;
+  --e-3: 12px;
+  --e-4: 16px;
+  --e-5: 20px;
+  --e-6: 24px;
+  --e-8: 32px;
+  --e-10: 40px;
+  --e-12: 48px;
+  --e-16: 64px;
+  --gap: 16px; /* um só intervalo entre blocos, na horizontal e na vertical */
+  --pad: 20px; /* respiro interno dos painéis */
+
+  /* raios: macios e escolhidos uma vez */
+  --r-folha: 16px;
+  --r-painel: 22px;
+  --r-cartao: 14px;
+  --r-campo: 10px;
+  --r-pilula: 999px;
+
+  /* medidas */
+  --coluna: 1100px; /* 12 × 77 + 11 × 16 */
+  --lateral: 228px;
+  --altura-controle: 38px;
+  --altura-linha: 63px;
+
+  /* movimento */
+  --rapido: 140ms;
+  --medio: 220ms;
+  --lento: 420ms;
+  --curva: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --curva-mola: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  /* o que flutua (menu, diálogo, notificação) tem sombra; nada parado tem */
+  --sombra-flutua: 0 12px 32px rgb(20 20 18 / 0.14), 0 2px 6px rgb(20 20 18 / 0.06);
+}
+
+/* tema escuro: neutros de verdade (sem azul-marinho), elevação por claridade */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) {
+    color-scheme: dark;
+    --moldura: #0c0c0b;
+    --folha: #141413;
+    --painel: #1b1b19;
+    --painel-2: #262623;
+    --sobre: #21211f;
+    --linha: #2a2a27;
+    --linha-leve: #222220;
+    --controle: #45453f;
+    --tinta: #f2f1ec;
+    --tinta-2: #bdbcb5;
+    --tinta-3: #a3a29b;
+    --primario: #f2f1ec;
+    --primario-hover: #ffffff;
+    --sobre-primario: #141413;
+    --acento: #5fbfb3;
+    --acento-texto: #74cfc3;
+    --acento-suave: #18302d;
+    --positivo: #5cc37a;
+    --negativo: #f07a6c;
+    --negativo-suave: #3a1d19;
+    --negativo-tinta: #f5a399;
+    --aviso: #f0c46b;
+    --aviso-suave: #2b2414;
+    --aviso-borda: #5a4719;
+    --tom-0: #6fa6e6;
+    --tom-1: #98a8c6;
+    --tom-2: #66bb87;
+    --tom-3: #e2a648;
+    --tom-4: #e586b4;
+    --tom-5: #b5c054;
+    --tom-6: #cb9670;
+    --tom-7: #5bbcd2;
+    --chart-3: #8a8983;
+    --chart-muted: #4a4a45;
+    --grid: #2b2b28;
+    --chart-span: 0.12;
+    --sombra-flutua: 0 14px 36px rgb(0 0 0 / 0.5), 0 2px 8px rgb(0 0 0 / 0.35);
+  }
+}
+:root[data-tema='escuro'] {
+  color-scheme: dark;
+  --moldura: #0c0c0b;
+  --folha: #141413;
+  --painel: #1b1b19;
+  --painel-2: #262623;
+  --sobre: #21211f;
+  --linha: #2a2a27;
+  --linha-leve: #222220;
+  --controle: #45453f;
+  --tinta: #f2f1ec;
+  --tinta-2: #bdbcb5;
+  --tinta-3: #a3a29b;
+  --primario: #f2f1ec;
+  --primario-hover: #ffffff;
+  --sobre-primario: #141413;
+  --acento: #5fbfb3;
+  --acento-texto: #74cfc3;
+  --acento-suave: #18302d;
+  --positivo: #5cc37a;
+  --negativo: #f07a6c;
+  --negativo-suave: #3a1d19;
+  --negativo-tinta: #f5a399;
+  --aviso: #f0c46b;
+  --aviso-suave: #2b2414;
+  --aviso-borda: #5a4719;
+  --tom-0: #6fa6e6;
+  --tom-1: #98a8c6;
+  --tom-2: #66bb87;
+  --tom-3: #e2a648;
+  --tom-4: #e586b4;
+  --tom-5: #b5c054;
+  --tom-6: #cb9670;
+  --tom-7: #5bbcd2;
+  --chart-3: #8a8983;
+  --chart-muted: #4a4a45;
+  --grid: #2b2b28;
+  --chart-span: 0.12;
+  --sombra-flutua: 0 14px 36px rgb(0 0 0 / 0.5), 0 2px 8px rgb(0 0 0 / 0.35);
+}
+
+/* o tom de cada área vira --t no elemento marcado com .tom-N; o suave sai da mistura com a folha */
+.tom-0 { --t: var(--tom-0); }
+.tom-1 { --t: var(--tom-1); }
+.tom-2 { --t: var(--tom-2); }
+.tom-3 { --t: var(--tom-3); }
+.tom-4 { --t: var(--tom-4); }
+.tom-5 { --t: var(--tom-5); }
+.tom-6 { --t: var(--tom-6); }
+.tom-7 { --t: var(--tom-7); }
+[class*='tom-'] {
+  --t-suave: color-mix(in srgb, var(--t) 13%, var(--folha));
+}

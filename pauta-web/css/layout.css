@@ -1,0 +1,313 @@
+/* Moldura do app.
+   Desktop (1024px ou mais): lateral de 228px no papel da moldura + folha branca afastada 8px da janela.
+   Celular e tablet: a folha vira a tela, com uma barra no topo (marca e uma ação) e abas embaixo.
+   Grade do conteúdo: 12 colunas de 77px com 16px entre elas = 1100px (12 × 77 + 11 × 16). */
+
+.app {
+  display: grid;
+  grid-template-columns: var(--lateral) minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+/* ------------------------------------------------ lateral */
+
+.lateral {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-6);
+  height: 100dvh;
+  padding: var(--e-5) var(--e-3) var(--e-4);
+  overflow-y: auto;
+}
+.marca-bloco {
+  display: grid;
+  gap: var(--e-3);
+  padding: 0 var(--e-2);
+}
+.marca-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--tinta);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+.perfil-troca {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  width: 100%;
+  min-height: 40px;
+  padding: 6px var(--e-2);
+  margin-inline: calc(var(--e-2) * -1);
+  border-radius: 12px;
+  text-align: left;
+  transition: background-color var(--rapido);
+}
+.perfil-troca:hover {
+  background: var(--painel-2);
+}
+.perfil-troca__texto {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+.perfil-troca__nome {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.perfil-troca__escopo {
+  color: var(--tinta-3);
+  font-size: var(--t-meta);
+}
+.perfil-troca .ico {
+  color: var(--tinta-3);
+}
+.inicial {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--painel-2);
+  color: var(--tinta);
+  font-size: var(--t-meta);
+  font-weight: 600;
+  flex: none;
+}
+
+.nav ul {
+  display: grid;
+  gap: 2px;
+}
+.nav__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 var(--e-3) 0 10px;
+  border-radius: 10px;
+  color: var(--tinta-2);
+  font-size: var(--t-corpo);
+  text-decoration: none;
+  transition: background-color var(--rapido), color var(--rapido);
+}
+.nav__item:hover {
+  background: var(--painel-2);
+  color: var(--tinta);
+}
+.nav__item.ativo {
+  background: var(--painel-2);
+  color: var(--tinta);
+  font-weight: 500;
+}
+.nav__item .conta {
+  margin-left: auto;
+}
+
+.foco-pilula {
+  display: grid;
+  gap: 2px;
+  padding: var(--e-3);
+  border-radius: var(--r-cartao);
+  background: var(--acento-suave);
+  color: var(--tinta);
+  text-decoration: none;
+}
+.foco-pilula__tempo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--acento-texto);
+  font-size: var(--t-meta);
+  font-weight: 600;
+}
+.foco-pilula__titulo {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lateral__rodape {
+  display: grid;
+  gap: var(--e-2);
+  margin-top: auto;
+}
+.estado-dados {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  min-height: 32px;
+  padding: 0 var(--e-1) 0 10px;
+  color: var(--tinta-3);
+  font-size: var(--t-meta);
+}
+.estado-dados__ponto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--positivo);
+  flex: none;
+}
+.estado-dados.demo .estado-dados__ponto {
+  background: var(--aviso);
+}
+.estado-dados.offline .estado-dados__ponto {
+  background: var(--negativo);
+}
+.estado-dados.carregando .estado-dados__ponto {
+  background: var(--tinta-3);
+}
+.estado-dados .botao-icone {
+  margin-left: auto;
+}
+
+/* ------------------------------------------------ folha */
+
+.folha {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: calc(100dvh - 16px);
+  margin: 8px 8px 8px 0;
+  border: 1px solid var(--linha);
+  border-radius: var(--r-folha);
+  background: var(--folha);
+}
+.faixa {
+  padding: var(--e-3) var(--e-8) 0;
+}
+.faixa:empty {
+  display: none;
+}
+.faixa .aviso {
+  max-width: var(--coluna);
+  margin: 0 auto;
+}
+.conteudo {
+  flex: 1;
+  outline: none;
+}
+.tela {
+  width: 100%;
+  max-width: calc(var(--coluna) + 2 * var(--e-8));
+  margin: 0 auto;
+  padding: var(--e-12) var(--e-8) var(--e-16);
+}
+
+/* barra do topo e abas: só no celular e no tablet */
+.topo,
+.abas {
+  display: none;
+}
+
+/* ------------------------------------------------ celular e tablet */
+
+@media (max-width: 1023px) {
+  .app {
+    display: block;
+  }
+  .lateral {
+    display: none;
+  }
+  .topo {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: var(--e-2);
+    height: calc(52px + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) var(--e-2) 0 var(--e-4);
+    background: var(--folha);
+  }
+  .topo.rolou {
+    box-shadow: 0 1px 0 var(--linha); /* taste-skill-ignore: barra fixa, a linha aparece só quando a página rola */
+  }
+  .topo__fim {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+  }
+  .topo .foco-pilula {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: var(--r-pilula);
+  }
+  .topo .foco-pilula__titulo {
+    display: none;
+  }
+  .folha {
+    min-height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .faixa {
+    padding: var(--e-2) var(--e-4) 0;
+  }
+  .tela {
+    padding: var(--e-4) var(--e-4) calc(104px + env(safe-area-inset-bottom));
+  }
+  .abas {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding: 6px var(--e-2) calc(6px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--linha);
+    background: var(--folha);
+  }
+  .aba {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 3px;
+    min-height: 52px;
+    border-radius: 12px;
+    color: var(--tinta-3);
+    font-size: var(--t-meta);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .aba.ativo {
+    color: var(--tinta);
+  }
+  .aba.ativo .aba__icone {
+    background: var(--painel-2);
+  }
+  .aba__icone {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 28px;
+    border-radius: var(--r-pilula);
+    transition: background-color var(--rapido);
+  }
+  .aba__icone .conta {
+    position: absolute;
+    margin: -14px 0 0 26px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 11px;
+  }
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  .tela {
+    padding-inline: var(--e-6);
+  }
+}
